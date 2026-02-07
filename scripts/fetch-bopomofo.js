@@ -45,7 +45,7 @@ function sleep(ms) {
 
 async function main() {
   const content = fs.readFileSync(WORDS_PATH, 'utf8');
-  const arrayMatch = content.match(/window\.KANGXUAN_WORDS\s*=\s*(\[\s*\{(?:[\s\S]*)\}\s*\])\s*;/);
+  const arrayMatch = content.match(/window\.HANLIN_WORDS\s*=\s*(\[\s*\{(?:[\s\S]*)\}\s*\])\s*;/);
   if (!arrayMatch) {
     console.error('無法解析 words.js');
     process.exit(1);

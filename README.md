@@ -1,6 +1,6 @@
-# 生字複習 App（康軒國小一年級）
+# 生字複習 App（翰林國小一年級）
 
-字卡式生字複習，康軒版 112 學年度上學期 1～6 課。
+字卡式生字複習，翰林版 112 學年度上學期 1～6 課。
 
 ## 使用方式
 
@@ -12,7 +12,7 @@
 ## 資料來源與編輯
 
 - 生字與注音在 `data/words.js`，格式為每課一個物件，內有 `title` 與 `words`（`char`、`bopomofo`）。
-- 可對照 [教育百科生字詞彙表（康軒 112 上 一年級）](https://pedia.cloud.edu.tw/Bookmark/Textword?category=%E5%9C%8B%E8%AA%9E&year=112_1&degree=1&press=%E5%BA%B7%E8%BB%92%E7%89%88) 各課「詞調名稱」欄位增修生字與注音。
+- 可對照 [教育百科生字詞彙表（翰林 112 上 一年級）](https://pedia.cloud.edu.tw/Bookmark/Textword?category=%E5%9C%8B%E8%AA%9E&year=112_1&degree=1&press=%E5%BA%B7%E8%BB%92%E7%89%88) 各課「詞調名稱」欄位增修生字與注音。
 
 ## 技術
 

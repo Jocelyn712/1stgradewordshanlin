@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>一上生字 康軒版</title>
+  <title>一上生字 翰林版</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
@@ -609,13 +609,13 @@
     <div class="home-animals" aria-hidden="true">
       <span>🐱</span><span>🐶</span><span>🐰</span><span>🐻</span><span>🦊</span><span>🐼</span>
     </div>
-    <h2 class="home-title">一上生字 康軒版</h2>
+    <h2 class="home-title">一上生字 翰林版</h2>
     <p class="home-sub">一起來玩吧！</p>
     <button type="button" class="home-btn" id="homeBtn">開始複習</button>
   </div>
 
   <div class="app-screen screen-hidden" id="appScreen">
-  <h1>一上生字 康軒版</h1>
+  <h1>一上生字 翰林版</h1>
 
   <div class="lesson-wrap">
     <label for="lesson">選擇課次</label>
@@ -679,7 +679,7 @@
       const appScreen = document.getElementById("appScreen");
       const homeBtn = document.getElementById("homeBtn");
 
-      const lessons = window.KANGXUAN_WORDS || [];
+      const lessons = window.HANLIN_WORDS || [];
       const FIREWORK_COLORS = [
         "#00f5ff", "#00ffcc", "#39ff14", "#ccff00", "#ffea00", "#ff9500",
         "#ff3366", "#ff00ff", "#bf00ff", "#7b2cbf", "#00b4d8", "#06d6a0"

@@ -7,7 +7,7 @@
 // 第六課 https://pedia.cloud.edu.tw/Bookmark/TCollection?TextNameId=0101011110106
 // 第七課 https://pedia.cloud.edu.tw/Bookmark/TCollection?TextNameId=0101011110107
 
-window.KANGXUAN_WORDS = [
+window.HANLIN_WORDS = [
   {
     id: "1",
     title: "第一課：小小羊",
