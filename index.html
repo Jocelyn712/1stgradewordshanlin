@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>一上生字 康軒版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a1628;
+      --card-bg: #1a1a1a;
+      --card-bg-light: #252525;
+      --primary: #ff9f1c;
+      --primary-light: #ffb84d;
+      --wrong: #ff6b6b;
+      --wrong-bg: #2a1515;
+      --text: #f0ebe3;
+      --muted: #9a8f7f;
+      --accent-yellow: #ffd93d;
+      --accent-coral: #ff6b6b;
+      --accent-mint: #6bcb77;
+      --accent-sky: #4d96ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      font-weight: 700;
+    }
+
+    .lesson-wrap {
+      margin-bottom: 1.5rem;
+      width: 100%;
+      max-width: 22rem;
+    }
+
+    .lesson-wrap label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid rgba(255, 159, 28, 0.4);
+      border-radius: 12px;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .card-box {
+      width: 100%;
+      max-width: 22rem;
+      min-height: 14rem;
+      background: var(--card-bg-light);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,159,28,0.15);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 217, 61, 0.25);
+    }
+
+    .card-box.show-bopomofo {
+      background: var(--wrong-bg);
+      border-color: rgba(255, 107, 107, 0.4);
+    }
+
+    .card-box.flip-show .bopomofo-wrap {
+      transform: rotateX(0deg);
+      opacity: 1;
+    }
+
+    .char {
+      font-size: 4rem;
+      line-height: 1.2;
+      margin: 0;
+      color: #fff;
+    }
+
+    /* 直式注音：每個音節 = 聲母+韻母直排，聲調在右方中間 */
+    .bopomofo-wrap {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 1rem;
+      margin-top: 0.75rem;
+      min-height: 2.5rem;
+      transform: rotateX(-90deg);
+      transform-origin: top center;
+      opacity: 0;
+      transition: transform 0.4s ease, opacity 0.25s ease;
+    }
+
+    .bopomofo-wrap.hidden {
+      visibility: hidden;
+      transform: rotateX(-90deg);
+      opacity: 0;
+      transition: none;
+    }
+
+    .bopomofo-syllable {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 1.5rem;
+      color: var(--wrong);
+      line-height: 1.35;
+    }
+
+    .bopomofo-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bopomofo-body span {
+      display: block;
+    }
+
+    .bopomofo-tone {
+      margin-left: 0.12em;
+      display: flex;
+      align-items: center;
+    }
+
+    /* 答對煙火 */
+    .fireworks-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .firework-particle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      margin-top: -5px;
+      border-radius: 50%;
+      background: var(--fp-color, var(--primary));
+      box-shadow: 0 0 8px var(--fp-color), 0 0 16px var(--fp-color), 0 0 24px rgba(255,255,255,0.4);
+      animation: firework-burst 0.9s ease-out forwards;
+      opacity: 1;
+    }
+
+    .firework-particle.big {
+      width: 16px;
+      height: 16px;
+      margin-left: -8px;
+      margin-top: -8px;
+      animation-duration: 1.6s;
+      box-shadow: 0 0 12px var(--fp-color), 0 0 24px var(--fp-color), 0 0 40px var(--fp-color), 0 0 56px rgba(255,255,255,0.35);
+    }
+
+    @keyframes firework-burst {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--fp-x), var(--fp-y)) scale(0.2);
+        opacity: 0;
+      }
+    }
+
+    /* 全頁大煙火 */
+    .fireworks-big-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fireworks-big-burst {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      margin-left: -10px;
+      margin-top: -10px;
+    }
+
+    .fireworks-big-burst .firework-particle.big {
+      left: 50%;
+      top: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+    }
+
+    .level-done {
+      text-align: center;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      background: rgba(255, 159, 28, 0.15);
+      border-radius: 16px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      border: 1px solid rgba(255, 159, 28, 0.4);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .level-done.hidden {
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .progress {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .streak-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      min-height: 1.75rem;
+    }
+
+    .streak-progress.hidden {
+      display: none;
+    }
+
+    .streak-dot {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .streak-dot.filled {
+      background: linear-gradient(180deg, #ffb84d 0%, #ff9f1c 100%);
+      box-shadow: 0 0 0 2px rgba(255, 159, 28, 0.4);
+    }
+
+    .streak-dot.empty {
+      background: #3a3530;
+    }
+
+    .streak-dot.filled:hover {
+      transform: scale(1.1);
+    }
+
+    .streak-icon {
+      font-size: 1rem;
+      margin-left: 0.25rem;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 22rem;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 6rem;
+      padding: 0.95rem 1rem;
+      font-size: 1.15rem;
+      font-family: inherit;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-play {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 2px solid rgba(255, 159, 28, 0.35);
+    }
+
+    .btn-correct {
+      background: linear-gradient(180deg, #ffb84d 0%, #ff9f1c 100%);
+      color: #0a0a0a;
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+
+    .btn-correct:hover {
+      background: linear-gradient(180deg, #ffc266 0%, #ffb84d 100%);
+    }
+
+    .btn-wrong {
+      background: linear-gradient(180deg, #ff7b7b 0%, #ff6b6b 100%);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .btn-wrong:hover {
+      filter: brightness(1.08);
+    }
+
+    .empty-msg {
+      color: var(--muted);
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .done-msg {
+      font-size: 1.25rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .add-review-wrap {
+      width: 100%;
+      max-width: 22rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      min-height: 2.5rem;
+    }
+
+    .add-review-wrap.hidden {
+      display: none;
+    }
+
+    .btn-add-review {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(255, 159, 28, 0.15);
+      border: 2px dashed rgba(255, 159, 28, 0.5);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-add-review:hover {
+      background: rgba(255, 159, 28, 0.25);
+    }
+
+    .btn-add-review:active {
+      transform: scale(0.98);
+    }
+
+    .add-review-btns {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .add-review-btns .btn-add-review {
+      flex: 1;
+      min-width: 8rem;
+    }
+
+    .btn-next-card {
+      flex: 1;
+      min-width: 8rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--text);
+      background: rgba(255, 159, 28, 0.25);
+      border: 2px solid rgba(255, 159, 28, 0.5);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-next-card:hover {
+      background: rgba(255, 159, 28, 0.35);
+    }
+
+    .btn-next-card:active {
+      transform: scale(0.98);
+    }
+
+    .add-review-toast {
+      font-size: 0.9rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-top: 0.35rem;
+      opacity: 0;
+      animation: toastIn 0.3s ease forwards;
+    }
+
+    @keyframes toastIn {
+      to { opacity: 1; }
+    }
+
+    /* 首頁 */
+    .home-screen {
+      width: 100%;
+      max-width: 22rem;
+      text-align: center;
+      padding: 2rem 1rem;
+      animation: homeIn 0.5s ease;
+    }
+
+    .home-screen.screen-hidden {
+      display: none;
+    }
+
+    .app-screen.screen-hidden {
+      display: none;
+    }
+
+    .app-screen {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes homeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .home-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 0.5rem;
+    }
+
+    .home-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      margin: 0 0 2rem;
+    }
+
+    .home-mascot {
+      font-size: 4.5rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .home-animals {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      font-size: 2.25rem;
+    }
+
+    .home-animals span {
+      display: inline-block;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .home-animals span:nth-child(1) { animation-delay: 0s; }
+    .home-animals span:nth-child(2) { animation-delay: 0.2s; }
+    .home-animals span:nth-child(3) { animation-delay: 0.4s; }
+    .home-animals span:nth-child(4) { animation-delay: 0.1s; }
+    .home-animals span:nth-child(5) { animation-delay: 0.3s; }
+    .home-animals span:nth-child(6) { animation-delay: 0.5s; }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .home-btn {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      font-size: 1.35rem;
+      font-family: inherit;
+      font-weight: 700;
+      color: #0a0a0a;
+      background: linear-gradient(180deg, #ffb84d 0%, #ff9f1c 100%);
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(255, 159, 28, 0.4);
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .home-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 28px rgba(255, 159, 28, 0.5);
+    }
+
+    .home-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 關卡結束彈窗 */
+    .level-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .level-modal-backdrop.hidden {
+      display: none;
+    }
+
+    .level-modal {
+      background: var(--card-bg-light);
+      border: 1px solid rgba(255, 159, 28, 0.35);
+      border-radius: 20px;
+      padding: 1.75rem;
+      max-width: 20rem;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    .level-modal h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+
+    .level-modal p {
+      margin: 0 0 1.25rem;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .level-modal-btns {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .level-modal-btns .btn {
+      min-width: 7rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="home-screen" id="homeScreen">
+    <div class="home-mascot" aria-hidden="true">📚✨</div>
+    <div class="home-animals" aria-hidden="true">
+      <span>🐱</span><span>🐶</span><span>🐰</span><span>🐻</span><span>🦊</span><span>🐼</span>
+    </div>
+    <h2 class="home-title">一上生字 康軒版</h2>
+    <p class="home-sub">一起來玩吧！</p>
+    <button type="button" class="home-btn" id="homeBtn">開始複習</button>
+  </div>
+
+  <div class="app-screen screen-hidden" id="appScreen">
+  <h1>一上生字 康軒版</h1>
+
+  <div class="lesson-wrap">
+    <label for="lesson">選擇課次</label>
+    <select id="lesson"></select>
+  </div>
+
+  <p class="progress" id="progress" aria-live="polite"></p>
+  <p class="streak-progress hidden" id="streakProgress" aria-live="polite" role="status" aria-label="答對五個就放大煙火進度"></p>
+
+  <div class="level-done hidden" id="levelDone" aria-live="polite"></div>
+
+  <div class="level-modal-backdrop hidden" id="levelModalBackdrop">
+    <div class="level-modal">
+      <h3 id="levelModalTitle">第 1 關 過關！ ★</h3>
+      <p id="levelModalQuestion">要不要玩下一關？</p>
+      <div class="level-modal-btns">
+        <button type="button" class="btn btn-correct" id="levelModalNext">下一關</button>
+        <button type="button" class="btn btn-play" id="levelModalAgain">再玩一次</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-box" id="cardBox">
+    <p class="char" id="char" aria-live="polite"></p>
+    <div class="bopomofo-wrap hidden" id="bopomofoWrap" aria-live="polite"></div>
+  </div>
+
+  <div class="add-review-wrap hidden" id="addReviewWrap">
+    <div class="add-review-btns">
+      <button type="button" class="btn-add-review" id="btnAddReview">📌 加強複習</button>
+      <button type="button" class="btn-next-card" id="btnNextCard">下一題</button>
+    </div>
+    <p class="add-review-toast hidden" id="addReviewToast"></p>
+  </div>
+
+  <div class="buttons" id="buttons">
+    <button type="button" class="btn btn-play" id="btnPlay" aria-label="播放讀音">🔊 播放</button>
+    <button type="button" class="btn btn-correct" id="btnCorrect">答對</button>
+    <button type="button" class="btn btn-wrong" id="btnWrong">答錯</button>
+  </div>
+  </div>
+
+  <script src="data/words.js"></script>
+  <script>
+    (function () {
+      const lessonSelect = document.getElementById("lesson");
+      const progressEl = document.getElementById("progress");
+      const streakProgressEl = document.getElementById("streakProgress");
+      const cardBox = document.getElementById("cardBox");
+      const charEl = document.getElementById("char");
+      const bopomofoWrap = document.getElementById("bopomofoWrap");
+      const levelDoneEl = document.getElementById("levelDone");
+      const addReviewWrap = document.getElementById("addReviewWrap");
+      const btnAddReview = document.getElementById("btnAddReview");
+      const addReviewToast = document.getElementById("addReviewToast");
+      const btnPlay = document.getElementById("btnPlay");
+      const btnCorrect = document.getElementById("btnCorrect");
+      const btnWrong = document.getElementById("btnWrong");
+      const btnNextCard = document.getElementById("btnNextCard");
+      const homeScreen = document.getElementById("homeScreen");
+      const appScreen = document.getElementById("appScreen");
+      const homeBtn = document.getElementById("homeBtn");
+
+      const lessons = window.KANGXUAN_WORDS || [];
+      const FIREWORK_COLORS = [
+        "#00f5ff", "#00ffcc", "#39ff14", "#ccff00", "#ffea00", "#ff9500",
+        "#ff3366", "#ff00ff", "#bf00ff", "#7b2cbf", "#00b4d8", "#06d6a0"
+      ];
+      const REVIEW_STORAGE_KEY = "kai_review_list";
+      let currentLessonIndex = 0;
+      let currentWordIndex = 0;
+      let currentWords = [];
+      let isReviewMode = false;
+      var correctStreak = 0;
+      var STREAK_TARGET = 5;
+      var currentRangeLabel = "";
+
+      function getReviewList() {
+        try {
+          var raw = localStorage.getItem(REVIEW_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function setReviewList(list) {
+        localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(list));
+      }
+
+      function updateLessonSelectReviewLabel() {
+        var opts = lessonSelect.options;
+        var last = opts[opts.length - 1];
+        if (last && last.value === "review") {
+          var n = getReviewList().length;
+          last.textContent = n > 0 ? "複習清單 (" + n + ")" : "複習清單";
+        }
+      }
+
+      /** 聲調符號：ˊ ˇ ˋ ˙ 放在聲母韻母右方中間 */
+      var TONE_MARKS = "ˊˇˋ˙";
+
+      function renderBopomofoVertical(bopomofoStr) {
+        bopomofoWrap.innerHTML = "";
+        if (!bopomofoStr) return;
+        var syllables = bopomofoStr.split(/\s+/);
+        syllables.forEach(function (syl) {
+          var col = document.createElement("div");
+          col.className = "bopomofo-syllable";
+          var body = document.createElement("div");
+          body.className = "bopomofo-body";
+          var toneChar = "";
+          var bodyChars = syl;
+          if (syl.length > 0 && TONE_MARKS.indexOf(syl[syl.length - 1]) !== -1) {
+            toneChar = syl[syl.length - 1];
+            bodyChars = syl.slice(0, -1);
+          }
+          for (var i = 0; i < bodyChars.length; i++) {
+            var s = document.createElement("span");
+            s.textContent = bodyChars[i];
+            body.appendChild(s);
+          }
+          col.appendChild(body);
+          if (toneChar) {
+            var toneSpan = document.createElement("span");
+            toneSpan.className = "bopomofo-tone";
+            toneSpan.textContent = toneChar;
+            col.appendChild(toneSpan);
+          }
+          bopomofoWrap.appendChild(col);
+        });
+      }
+
+      function fillLessonSelect() {
+        lessonSelect.innerHTML = "";
+        lessons.forEach(function (lesson, i) {
+          var opt = document.createElement("option");
+          opt.value = String(i);
+          opt.textContent = "第" + (i + 1) + "關：" + lesson.title.replace(/^第.課：/, "");
+          lessonSelect.appendChild(opt);
+        });
+        for (var r = 2; r <= lessons.length; r++) {
+          var opt = document.createElement("option");
+          opt.value = "0-" + (r - 1);
+          opt.textContent = "第1～" + r + "關（混合）";
+          lessonSelect.appendChild(opt);
+        }
+        var reviewOpt = document.createElement("option");
+        reviewOpt.value = "review";
+        var n = getReviewList().length;
+        reviewOpt.textContent = n > 0 ? "複習清單 (" + n + ")" : "複習清單";
+        lessonSelect.appendChild(reviewOpt);
+      }
+
+      function shuffleArray(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i];
+          a[i] = a[j];
+          a[j] = t;
+        }
+        return a;
+      }
+
+      function updateStreakDisplay() {
+        if (currentWords.length === 0 || isReviewMode) {
+          streakProgressEl.classList.add("hidden");
+          streakProgressEl.innerHTML = "";
+          return;
+        }
+        streakProgressEl.classList.remove("hidden");
+        var n = correctStreak % STREAK_TARGET;
+        if (n === 0 && correctStreak > 0) {
+          n = STREAK_TARGET;
+        }
+        streakProgressEl.innerHTML = "";
+        for (var i = 0; i < STREAK_TARGET; i++) {
+          var dot = document.createElement("span");
+          dot.className = "streak-dot " + (i < n ? "filled" : "empty");
+          dot.setAttribute("aria-hidden", "true");
+          streakProgressEl.appendChild(dot);
+        }
+        var icon = document.createElement("span");
+        icon.className = "streak-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "🎆";
+        streakProgressEl.appendChild(icon);
+      }
+
+      function loadLesson() {
+        correctStreak = 0;
+        addReviewWrap.classList.add("hidden");
+        addReviewToast.classList.add("hidden");
+        var val = lessonSelect.value;
+        if (val === "review") {
+          isReviewMode = true;
+          var list = getReviewList();
+          currentWords = [];
+          list.forEach(function (item) {
+            var lesson = lessons[item.lessonIndex];
+            if (lesson && lesson.words && lesson.words[item.wordIndex]) {
+              currentWords.push(lesson.words[item.wordIndex]);
+            }
+          });
+          currentLessonIndex = -1;
+          currentWordIndex = 0;
+          bopomofoWrap.classList.add("hidden");
+          cardBox.classList.remove("show-bopomofo", "flip-show");
+          levelDoneEl.classList.add("hidden");
+          if (currentWords.length === 0) {
+            progressEl.textContent = "到各關答錯時可按「加強複習」";
+            charEl.textContent = "還沒有加入任何生字";
+            bopomofoWrap.innerHTML = "";
+            bopomofoWrap.classList.add("hidden");
+          } else {
+            renderCard();
+          }
+          return;
+        }
+        isReviewMode = false;
+        currentRangeLabel = "";
+        if (val.indexOf("-") !== -1) {
+          var parts = val.split("-");
+          var fromIdx = parseInt(parts[0], 10);
+          var toIdx = parseInt(parts[1], 10);
+          currentRangeLabel = "第" + (fromIdx + 1) + "～" + (toIdx + 1) + "關";
+          currentWords = [];
+          for (var li = fromIdx; li <= toIdx; li++) {
+            var le = lessons[li];
+            if (le && le.words) {
+              for (var wi = 0; wi < le.words.length; wi++) {
+                currentWords.push({
+                  char: le.words[wi].char,
+                  bopomofo: le.words[wi].bopomofo,
+                  lessonIndex: li,
+                  wordIndex: wi
+                });
+              }
+            }
+          }
+          currentWords = shuffleArray(currentWords);
+          currentLessonIndex = -2;
+          currentWordIndex = 0;
+          bopomofoWrap.classList.add("hidden");
+          cardBox.classList.remove("show-bopomofo", "flip-show");
+          levelDoneEl.classList.add("hidden");
+          if (currentWords.length === 0) {
+            renderEmpty();
+          } else {
+            renderCard();
+          }
+          return;
+        }
+        currentLessonIndex = parseInt(val, 10);
+        var lesson = lessons[currentLessonIndex];
+        if (!lesson || !lesson.words || lesson.words.length === 0) {
+          currentWords = [];
+          renderEmpty();
+          return;
+        }
+        currentWords = lesson.words.map(function (w, wi) {
+          return { char: w.char, bopomofo: w.bopomofo, lessonIndex: currentLessonIndex, wordIndex: wi };
+        });
+        currentWordIndex = 0;
+        bopomofoWrap.classList.add("hidden");
+        cardBox.classList.remove("show-bopomofo", "flip-show");
+        levelDoneEl.classList.add("hidden");
+        renderCard();
+      }
+
+      function renderEmpty() {
+        charEl.textContent = "";
+        bopomofoWrap.innerHTML = "";
+        bopomofoWrap.classList.add("hidden");
+        progressEl.textContent = "";
+        addReviewWrap.classList.add("hidden");
+        cardBox.classList.remove("show-bopomofo", "flip-show");
+      }
+
+      function renderCard() {
+        if (currentWords.length === 0) {
+          progressEl.textContent = "";
+          charEl.textContent = "這課沒有生字";
+          bopomofoWrap.innerHTML = "";
+          bopomofoWrap.classList.add("hidden");
+          return;
+        }
+
+        var w = currentWords[currentWordIndex];
+        charEl.textContent = w.char;
+        renderBopomofoVertical(w.bopomofo);
+        bopomofoWrap.classList.add("hidden");
+        cardBox.classList.remove("show-bopomofo", "flip-show");
+
+        var total = currentWords.length;
+        progressEl.textContent = isReviewMode
+          ? "加強複習 " + (currentWordIndex + 1) + " / " + total
+          : "第 " + (currentWordIndex + 1) + " / " + total + " 張";
+        updateStreakDisplay();
+      }
+
+      function showBopomofo() {
+        bopomofoWrap.classList.remove("hidden");
+        cardBox.classList.add("show-bopomofo");
+        requestAnimationFrame(function () {
+          cardBox.classList.add("flip-show");
+        });
+        if (!isReviewMode) {
+          addReviewWrap.classList.remove("hidden");
+          addReviewToast.classList.add("hidden");
+        }
+      }
+
+      function triggerFireworks(callback) {
+        var wrap = document.createElement("div");
+        wrap.className = "fireworks-wrap";
+        var n = 28;
+        for (var i = 0; i < n; i++) {
+          var angle = (i / n) * Math.PI * 2 + Math.random() * 0.3;
+          var r = 80 + Math.random() * 70;
+          var tx = Math.cos(angle) * r;
+          var ty = Math.sin(angle) * r;
+          var p = document.createElement("div");
+          p.className = "firework-particle";
+          p.style.setProperty("--fp-x", tx + "px");
+          p.style.setProperty("--fp-y", ty + "px");
+          p.style.setProperty("--fp-color", FIREWORK_COLORS[i % FIREWORK_COLORS.length]);
+          wrap.appendChild(p);
+        }
+        document.body.appendChild(wrap);
+        setTimeout(function () {
+          wrap.remove();
+          if (callback) callback();
+        }, 950);
+      }
+
+      function triggerBigFireworks() {
+        var wrap = document.createElement("div");
+        wrap.className = "fireworks-big-wrap";
+        var particlesPerBurst = 78;
+        var radius = 220;
+        function addBurst(cx, cy, delay) {
+          setTimeout(function () {
+            var burst = document.createElement("div");
+            burst.className = "fireworks-big-burst";
+            burst.style.left = cx + "%";
+            burst.style.top = cy + "%";
+            for (var i = 0; i < particlesPerBurst; i++) {
+              var angle = (i / particlesPerBurst) * Math.PI * 2 + Math.random() * 0.6;
+              var r = radius * (0.75 + Math.random() * 0.5);
+              var tx = Math.cos(angle) * r;
+              var ty = Math.sin(angle) * r;
+              var p = document.createElement("div");
+              p.className = "firework-particle big";
+              p.style.setProperty("--fp-x", tx + "px");
+              p.style.setProperty("--fp-y", ty + "px");
+              p.style.setProperty("--fp-color", FIREWORK_COLORS[i % FIREWORK_COLORS.length]);
+              burst.appendChild(p);
+            }
+            wrap.appendChild(burst);
+            setTimeout(function () {
+              burst.remove();
+            }, 1800);
+          }, delay);
+        }
+        addBurst(50, 40, 0);
+        addBurst(25, 55, 280);
+        addBurst(75, 50, 560);
+        addBurst(50, 65, 900);
+        addBurst(35, 35, 1180);
+        addBurst(68, 60, 1460);
+        addBurst(50, 48, 1900);
+        addBurst(20, 45, 2200);
+        addBurst(80, 55, 2500);
+        document.body.appendChild(wrap);
+        setTimeout(function () {
+          wrap.remove();
+        }, 4800);
+      }
+
+      function nextCard() {
+        if (currentWords.length === 0) return;
+        addReviewWrap.classList.add("hidden");
+        currentWordIndex += 1;
+        if (currentWordIndex >= currentWords.length) {
+          if (isReviewMode) {
+            currentWordIndex = 0;
+            levelDoneEl.textContent = "加強複習一輪完成！ ★";
+            levelDoneEl.classList.remove("hidden");
+            setTimeout(function () {
+              levelDoneEl.classList.add("hidden");
+            }, 2500);
+          } else {
+            levelModalBackdrop.classList.remove("hidden");
+            if (currentLessonIndex === -2) {
+              levelModalTitle.textContent = (currentRangeLabel || "混合關卡") + " 過關！ ★";
+              levelModalQuestion.textContent = "要不要再玩一次？";
+              levelModalNext.textContent = "選其他關卡";
+              levelModalNext.style.display = "";
+            } else {
+              var levelNum = currentLessonIndex + 1;
+              levelModalTitle.textContent = "第 " + levelNum + " 關 過關！ ★";
+              levelModalQuestion.textContent = "要不要玩下一關？";
+              levelModalNext.textContent = levelNum >= lessons.length ? "回第一關" : "下一關";
+              levelModalNext.style.display = "";
+            }
+            bopomofoWrap.classList.add("hidden");
+            cardBox.classList.remove("show-bopomofo", "flip-show");
+            return;
+          }
+        }
+        bopomofoWrap.classList.add("hidden");
+        cardBox.classList.remove("show-bopomofo", "flip-show");
+        renderCard();
+      }
+
+      var levelModalBackdrop = document.getElementById("levelModalBackdrop");
+      var levelModalTitle = document.getElementById("levelModalTitle");
+      var levelModalQuestion = document.getElementById("levelModalQuestion");
+      var levelModalNext = document.getElementById("levelModalNext");
+      var levelModalAgain = document.getElementById("levelModalAgain");
+
+      levelModalNext.addEventListener("click", function () {
+        levelModalBackdrop.classList.add("hidden");
+        if (currentLessonIndex === -2) {
+          return;
+        }
+        if (currentLessonIndex + 1 >= lessons.length) {
+          lessonSelect.value = 0;
+        } else {
+          lessonSelect.value = currentLessonIndex + 1;
+        }
+        loadLesson();
+      });
+
+      levelModalAgain.addEventListener("click", function () {
+        levelModalBackdrop.classList.add("hidden");
+        if (currentLessonIndex === -2) {
+          currentWords = shuffleArray(currentWords);
+        }
+        currentWordIndex = 0;
+        bopomofoWrap.classList.add("hidden");
+        cardBox.classList.remove("show-bopomofo", "flip-show");
+        renderCard();
+      });
+
+      function playTTS() {
+        var w = currentWords[currentWordIndex];
+        if (!w) return;
+        if (!window.speechSynthesis) {
+          alert("此瀏覽器不支援語音播放");
+          return;
+        }
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(w.char);
+        u.lang = "zh-TW";
+        u.rate = 0.9;
+        window.speechSynthesis.speak(u);
+      }
+
+      btnAddReview.addEventListener("click", function () {
+        if (isReviewMode) return;
+        var w = currentWords[currentWordIndex];
+        if (!w || w.lessonIndex == null) return;
+        var list = getReviewList();
+        var entry = { lessonIndex: w.lessonIndex, wordIndex: w.wordIndex };
+        var exists = list.some(function (e) {
+          return e.lessonIndex === entry.lessonIndex && e.wordIndex === entry.wordIndex;
+        });
+        if (exists) {
+          addReviewToast.textContent = "已在清單裡";
+        } else {
+          list.push(entry);
+          setReviewList(list);
+          addReviewToast.textContent = "已加入複習清單 ✓";
+          updateLessonSelectReviewLabel();
+        }
+        addReviewToast.classList.remove("hidden");
+        setTimeout(function () {
+          addReviewToast.classList.add("hidden");
+        }, 1500);
+      });
+
+      lessonSelect.addEventListener("change", loadLesson);
+      btnCorrect.addEventListener("click", function () {
+        correctStreak += 1;
+        triggerFireworks(function () {
+          nextCard();
+          updateStreakDisplay();
+          if (correctStreak >= STREAK_TARGET) {
+            correctStreak = 0;
+            triggerBigFireworks();
+          }
+        });
+      });
+      btnWrong.addEventListener("click", function () {
+        showBopomofo();
+      });
+      btnNextCard.addEventListener("click", function () {
+        nextCard();
+      });
+      btnPlay.addEventListener("click", playTTS);
+
+      homeBtn.addEventListener("click", function () {
+        homeScreen.classList.add("screen-hidden");
+        appScreen.classList.remove("screen-hidden");
+      });
+
+      fillLessonSelect();
+      loadLesson();
+    })();
+  </script>
+</body>
+</html>
