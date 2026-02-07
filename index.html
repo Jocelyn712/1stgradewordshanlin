@@ -200,35 +200,6 @@
       }
     }
 
-    /* 全頁大煙火 */
-    .fireworks-big-wrap {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 30;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .fireworks-big-burst {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      margin-left: -10px;
-      margin-top: -10px;
-    }
-
-    .fireworks-big-burst .firework-particle.big {
-      left: 50%;
-      top: 50%;
-      margin-left: -8px;
-      margin-top: -8px;
-    }
-
     .level-done {
       text-align: center;
       padding: 1rem 1.5rem;
@@ -601,6 +572,42 @@
     .level-modal-btns .btn {
       min-width: 7rem;
     }
+
+    /* 答對五題盛大慶祝：math 專案 canvas 煙火 + 鼓勵話語 */
+    #fireworksCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .correct-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 10000;
+    }
+    .correct-overlay .big-text {
+      font-size: clamp(1.75rem, 8vw, 3.5rem);
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(255, 200, 50, 0.9), 0 0 60px rgba(255, 159, 28, 0.6);
+      animation: popIn 0.5s ease-out, pulse 0.6s ease 0.5s infinite alternate;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
   </style>
 </head>
 <body>
@@ -626,6 +633,11 @@
   <p class="streak-progress hidden" id="streakProgress" aria-live="polite" role="status" aria-label="答對五個就放大煙火進度"></p>
 
   <div class="level-done hidden" id="levelDone" aria-live="polite"></div>
+
+  <canvas id="fireworksCanvas" aria-hidden="true"></canvas>
+  <div class="correct-overlay" id="correctOverlay" style="display:none;" aria-live="polite" role="alert">
+    <span class="big-text" id="correctBigText"></span>
+  </div>
 
   <div class="level-modal-backdrop hidden" id="levelModalBackdrop">
     <div class="level-modal">
@@ -683,6 +695,17 @@
       const FIREWORK_COLORS = [
         "#00f5ff", "#00ffcc", "#39ff14", "#ccff00", "#ffea00", "#ff9500",
         "#ff3366", "#ff00ff", "#bf00ff", "#7b2cbf", "#00b4d8", "#06d6a0"
+      ];
+      /* 答對五題鼓勵話語（來自 math/docs/celebration-snippet.md） */
+      const CORRECT_PHRASES = [
+        "天才！太強了！🌟", "完美！不可思議！🎉", "神級表現！🔥",
+        "傳說級答題！👑", "腦袋開掛啦！💥", "無人能擋！⚡",
+        "閃亮亮答對！✨", "冠軍就是你！🏆"
+      ];
+      var CELEBRATION_PHRASES = [
+        "你好棒！", "太厲害了！", "繼續保持！", "超級讚！", "進步好多！",
+        "真聰明！", "做得很好！", "了不起！", "加油加油！", "越來越厲害！",
+        "掌聲鼓勵！", "完美！", "一級棒！", "厲害喔！", "好棒棒！"
       ];
       const REVIEW_STORAGE_KEY = "kai_review_list";
       let currentLessonIndex = 0;
@@ -953,48 +976,75 @@
         }, 950);
       }
 
-      function triggerBigFireworks() {
-        var wrap = document.createElement("div");
-        wrap.className = "fireworks-big-wrap";
-        var particlesPerBurst = 78;
-        var radius = 220;
-        function addBurst(cx, cy, delay) {
-          setTimeout(function () {
-            var burst = document.createElement("div");
-            burst.className = "fireworks-big-burst";
-            burst.style.left = cx + "%";
-            burst.style.top = cy + "%";
-            for (var i = 0; i < particlesPerBurst; i++) {
-              var angle = (i / particlesPerBurst) * Math.PI * 2 + Math.random() * 0.6;
-              var r = radius * (0.75 + Math.random() * 0.5);
-              var tx = Math.cos(angle) * r;
-              var ty = Math.sin(angle) * r;
-              var p = document.createElement("div");
-              p.className = "firework-particle big";
-              p.style.setProperty("--fp-x", tx + "px");
-              p.style.setProperty("--fp-y", ty + "px");
-              p.style.setProperty("--fp-color", FIREWORK_COLORS[i % FIREWORK_COLORS.length]);
-              burst.appendChild(p);
-            }
-            wrap.appendChild(burst);
-            setTimeout(function () {
-              burst.remove();
-            }, 1800);
-          }, delay);
+      function runFireworks() {
+        var canvas = document.getElementById("fireworksCanvas");
+        var ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var particles = [];
+        var colors = ["#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff", "#ff8c42", "#c44dff", "#00f2fe"];
+        var animId;
+        function createBurst(x, y, count) {
+          for (var i = 0; i < count; i++) {
+            var angle = (Math.PI * 2 * i) / count + Math.random();
+            var v = 4 + Math.random() * 8;
+            particles.push({
+              x: x, y: y,
+              vx: Math.cos(angle) * v,
+              vy: Math.sin(angle) * v,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              life: 1,
+              decay: 0.012 + Math.random() * 0.01,
+              size: 2 + Math.random() * 3
+            });
+          }
         }
-        addBurst(50, 40, 0);
-        addBurst(25, 55, 280);
-        addBurst(75, 50, 560);
-        addBurst(50, 65, 900);
-        addBurst(35, 35, 1180);
-        addBurst(68, 60, 1460);
-        addBurst(50, 48, 1900);
-        addBurst(20, 45, 2200);
-        addBurst(80, 55, 2500);
-        document.body.appendChild(wrap);
+        function loop() {
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          for (var i = particles.length - 1; i >= 0; i--) {
+            var p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15;
+            p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          if (particles.length > 0) animId = requestAnimationFrame(loop);
+          else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        createBurst(canvas.width / 2, canvas.height / 2, 80);
         setTimeout(function () {
-          wrap.remove();
-        }, 4800);
+          createBurst(canvas.width * 0.3, canvas.height * 0.4, 50);
+          createBurst(canvas.width * 0.7, canvas.height * 0.5, 50);
+        }, 150);
+        setTimeout(function () {
+          createBurst(canvas.width * 0.5, canvas.height * 0.3, 45);
+          createBurst(canvas.width * 0.2, canvas.height * 0.7, 45);
+          createBurst(canvas.width * 0.8, canvas.height * 0.6, 45);
+        }, 350);
+        loop();
+        setTimeout(function () {
+          cancelAnimationFrame(animId);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 2800);
+      }
+
+      function showCorrectCelebration() {
+        var overlay = document.getElementById("correctOverlay");
+        var bigText = document.getElementById("correctBigText");
+        bigText.textContent = CORRECT_PHRASES[Math.floor(Math.random() * CORRECT_PHRASES.length)];
+        overlay.style.display = "flex";
+        runFireworks();
+        setTimeout(function () {
+          overlay.style.display = "none";
+        }, 2500);
       }
 
       function nextCard() {
@@ -1108,7 +1158,7 @@
           updateStreakDisplay();
           if (correctStreak >= STREAK_TARGET) {
             correctStreak = 0;
-            triggerBigFireworks();
+            showCorrectCelebration();
           }
         });
       });
