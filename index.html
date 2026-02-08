@@ -415,6 +415,12 @@
       animation: toastIn 0.3s ease forwards;
     }
 
+    .add-review-toast.hidden {
+      display: none;
+      opacity: 0;
+      animation: none;
+    }
+
     @keyframes toastIn {
       to { opacity: 1; }
     }
@@ -844,6 +850,9 @@
               currentWords.push(lesson.words[item.wordIndex]);
             }
           });
+          if (currentWords.length > 0) {
+            currentWords = shuffleArray(currentWords);
+          }
           currentLessonIndex = -1;
           currentWordIndex = 0;
           bopomofoWrap.classList.add("hidden");
@@ -903,6 +912,7 @@
         currentWords = lesson.words.map(function (w, wi) {
           return { char: w.char, bopomofo: w.bopomofo, lessonIndex: currentLessonIndex, wordIndex: wi };
         });
+        currentWords = shuffleArray(currentWords);
         currentWordIndex = 0;
         bopomofoWrap.classList.add("hidden");
         cardBox.classList.remove("show-bopomofo", "flip-show");
@@ -1050,9 +1060,11 @@
       function nextCard() {
         if (currentWords.length === 0) return;
         addReviewWrap.classList.add("hidden");
+        addReviewToast.classList.add("hidden");
         currentWordIndex += 1;
         if (currentWordIndex >= currentWords.length) {
           if (isReviewMode) {
+            currentWords = shuffleArray(currentWords);
             currentWordIndex = 0;
             levelDoneEl.textContent = "加強複習一輪完成！ ★";
             levelDoneEl.classList.remove("hidden");
@@ -1104,7 +1116,7 @@
 
       levelModalAgain.addEventListener("click", function () {
         levelModalBackdrop.classList.add("hidden");
-        if (currentLessonIndex === -2) {
+        if (currentLessonIndex === -2 || currentLessonIndex >= 0) {
           currentWords = shuffleArray(currentWords);
         }
         currentWordIndex = 0;
